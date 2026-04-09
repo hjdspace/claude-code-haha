@@ -3,22 +3,18 @@ import { CopyButton } from '../shared/CopyButton'
 type Props = {
   copyText?: string
   copyLabel: string
-  align?: 'start' | 'end'
 }
 
 export function MessageActionBar({
   copyText,
   copyLabel,
-  align = 'start',
 }: Props) {
   const hasCopy = Boolean(copyText?.trim())
 
   if (!hasCopy) return null
 
   return (
-    <div
-      className={`mt-1.5 flex ${align === 'end' ? 'justify-end' : 'justify-start'}`}
-    >
+    <div className="shrink-0 pb-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
       <CopyButton
         text={copyText!}
         label={copyLabel}
