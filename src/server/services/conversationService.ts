@@ -119,7 +119,7 @@ export class ConversationService {
     // 工作目录就变成 `/`。把 CALLER_DIR / PWD 显式覆盖成 workDir，preload.ts
     // chdir 后落到正确目录。
     //
-    const childEnv = this.buildChildEnv(workDir)
+    const childEnv = await this.buildChildEnv(workDir)
 
     let proc: ReturnType<typeof Bun.spawn>
     try {
@@ -471,7 +471,7 @@ export class ConversationService {
     return args
   }
 
-  private buildChildEnv(workDir: string): Record<string, string> {
+  private async buildChildEnv(workDir: string): Promise<Record<string, string>> {
     // Provider isolation: when Desktop has its own provider config/index,
     // strip inherited provider env vars so the child CLI reads fresh values
     // from ~/.claude/cc-haha/settings.json instead of stale process.env.
@@ -511,9 +511,32 @@ export class ConversationService {
       // 否则 CLI 会忽略 provider 的 AUTH_TOKEN、错误地走 OAuth 打到第三方
       // endpoint。详见 src/utils/auth.ts isManagedOAuthContext()。
       ...(this.shouldMarkManagedOAuth()
-        ? { CLAUDE_CODE_ENTRYPOINT: 'claude-desktop' }
+        ? await this.buildOfficialOAuthEnv()
         : {}),
     }
+  }
+
+  /**
+   * 官方模式下构造 CLI 子进程的 auth env:
+   * - CLAUDE_CODE_ENTRYPOINT=claude-desktop 让 CLI 忽略外部残留 ANTHROPIC_* env
+   * - 如果 haha 自管的 oauth.json 里有可用 token,注入 CLAUDE_CODE_OAUTH_TOKEN
+   *   让 CLI 直接拿 env 里的 token,不碰 Keychain,绕开 macOS ACL 静默拒绝
+   *   (这是 DMG 安装 .app 后 403 "Request not allowed" 的唯一根治方案)
+   */
+  private async buildOfficialOAuthEnv(): Promise<Record<string, string>> {
+    const env: Record<string, string> = {
+      CLAUDE_CODE_ENTRYPOINT: 'claude-desktop',
+    }
+    try {
+      const { hahaOAuthService } = await import('./hahaOAuthService.js')
+      const token = await hahaOAuthService.ensureFreshAccessToken()
+      if (token) {
+        env.CLAUDE_CODE_OAUTH_TOKEN = token
+      }
+    } catch (err) {
+      console.error('[conversationService] ensureFreshAccessToken failed:', err)
+    }
+    return env
   }
 
   private shouldStripInheritedProviderEnv(): boolean {

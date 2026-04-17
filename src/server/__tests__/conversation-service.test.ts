@@ -10,6 +10,7 @@ describe('ConversationService', () => {
   let originalAuthToken: string | undefined
   let originalBaseUrl: string | undefined
   let originalModel: string | undefined
+  let originalEntrypoint: string | undefined
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cc-haha-conversation-service-'))
@@ -17,11 +18,15 @@ describe('ConversationService', () => {
     originalAuthToken = process.env.ANTHROPIC_AUTH_TOKEN
     originalBaseUrl = process.env.ANTHROPIC_BASE_URL
     originalModel = process.env.ANTHROPIC_MODEL
+    originalEntrypoint = process.env.CLAUDE_CODE_ENTRYPOINT
 
     process.env.CLAUDE_CONFIG_DIR = tmpDir
     process.env.ANTHROPIC_AUTH_TOKEN = 'test-token'
     process.env.ANTHROPIC_BASE_URL = 'https://example.invalid/anthropic'
     process.env.ANTHROPIC_MODEL = 'test-model'
+    // Clear inherited CLAUDE_CODE_ENTRYPOINT so tests can assert whether
+    // buildChildEnv injects it or not without interference from the shell env.
+    delete process.env.CLAUDE_CODE_ENTRYPOINT
   })
 
   afterEach(async () => {
@@ -37,12 +42,15 @@ describe('ConversationService', () => {
     if (originalModel === undefined) delete process.env.ANTHROPIC_MODEL
     else process.env.ANTHROPIC_MODEL = originalModel
 
+    if (originalEntrypoint === undefined) delete process.env.CLAUDE_CODE_ENTRYPOINT
+    else process.env.CLAUDE_CODE_ENTRYPOINT = originalEntrypoint
+
     await fs.rm(tmpDir, { recursive: true, force: true })
   })
 
-  test('keeps inherited provider env when no desktop provider config exists', () => {
+  test('keeps inherited provider env when no desktop provider config exists', async () => {
     const service = new ConversationService() as any
-    const env = service.buildChildEnv('D:\\workspace\\code\\myself_code\\cc-haha') as Record<string, string>
+    const env = (await service.buildChildEnv('D:\\workspace\\code\\myself_code\\cc-haha')) as Record<string, string>
 
     expect(env.ANTHROPIC_AUTH_TOKEN).toBe('test-token')
     expect(env.ANTHROPIC_BASE_URL).toBe('https://example.invalid/anthropic')
@@ -59,11 +67,61 @@ describe('ConversationService', () => {
     )
 
     const service = new ConversationService() as any
-    const env = service.buildChildEnv('D:\\workspace\\code\\myself_code\\cc-haha') as Record<string, string>
+    const env = (await service.buildChildEnv('D:\\workspace\\code\\myself_code\\cc-haha')) as Record<string, string>
 
     expect(env.ANTHROPIC_AUTH_TOKEN).toBeUndefined()
     expect(env.ANTHROPIC_BASE_URL).toBeUndefined()
     expect(env.ANTHROPIC_MODEL).toBeUndefined()
+  })
+
+  test('buildChildEnv injects CLAUDE_CODE_OAUTH_TOKEN when official mode + haha oauth token exists', async () => {
+    const ccHahaDir = path.join(tmpDir, 'cc-haha')
+    await fs.mkdir(ccHahaDir, { recursive: true })
+    await fs.writeFile(
+      path.join(ccHahaDir, 'settings.json'),
+      JSON.stringify({ env: {} }),
+      'utf-8',
+    )
+
+    const { hahaOAuthService } = await import('../services/hahaOAuthService.js')
+    await hahaOAuthService.saveTokens({
+      accessToken: 'haha-fresh-token',
+      refreshToken: 'haha-refresh-xxx',
+      expiresAt: Date.now() + 30 * 60_000,
+      scopes: ['user:inference'],
+      subscriptionType: 'max',
+    })
+
+    const service = new ConversationService() as any
+    const env = (await service.buildChildEnv('/tmp')) as Record<string, string>
+
+    expect(env.CLAUDE_CODE_ENTRYPOINT).toBe('claude-desktop')
+    expect(env.CLAUDE_CODE_OAUTH_TOKEN).toBe('haha-fresh-token')
+  })
+
+  test('buildChildEnv does NOT inject CLAUDE_CODE_OAUTH_TOKEN when not official mode', async () => {
+    const ccHahaDir = path.join(tmpDir, 'cc-haha')
+    await fs.mkdir(ccHahaDir, { recursive: true })
+    await fs.writeFile(
+      path.join(ccHahaDir, 'settings.json'),
+      JSON.stringify({ env: { ANTHROPIC_AUTH_TOKEN: 'custom-provider-token' } }),
+      'utf-8',
+    )
+
+    const { hahaOAuthService } = await import('../services/hahaOAuthService.js')
+    await hahaOAuthService.saveTokens({
+      accessToken: 'haha-token-should-not-be-used',
+      refreshToken: null,
+      expiresAt: null,
+      scopes: [],
+      subscriptionType: null,
+    })
+
+    const service = new ConversationService() as any
+    const env = (await service.buildChildEnv('/tmp')) as Record<string, string>
+
+    expect(env.CLAUDE_CODE_OAUTH_TOKEN).toBeUndefined()
+    expect(env.CLAUDE_CODE_ENTRYPOINT).toBeUndefined()
   })
 
   test('uses bun entrypoint fallback on Windows dev mode', () => {
