@@ -86,7 +86,12 @@ type ChatStore = {
   getSession: (sessionId: string) => PerSessionState
   connectToSession: (sessionId: string) => void
   disconnectSession: (sessionId: string) => void
-  sendMessage: (sessionId: string, content: string, attachments?: AttachmentRef[]) => void
+  sendMessage: (
+    sessionId: string,
+    content: string,
+    attachments?: AttachmentRef[],
+    options?: { displayContent?: string },
+  ) => void
   respondToPermission: (
     sessionId: string,
     requestId: string,
@@ -206,8 +211,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     })
   },
 
-  sendMessage: (sessionId, content, attachments?) => {
-    const userFacingContent = content.trim()
+  sendMessage: (sessionId, content, attachments, options) => {
+    const userFacingContent =
+      options?.displayContent?.trim() || content.trim()
     const isMemberSession = !!useTeamStore.getState().getMemberBySessionId(sessionId)
     const uiAttachments: UIAttachment[] | undefined =
       attachments && attachments.length > 0

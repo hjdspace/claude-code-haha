@@ -114,13 +114,22 @@ export function buildRenderModel(messages: UIMessage[]): RenderModel {
   return { renderItems: items, toolResultMap, childToolCallsByParent }
 }
 
-export function MessageList() {
+type MessageListProps = {
+  sessionId?: string | null
+}
+
+export function MessageList({ sessionId }: MessageListProps = {}) {
   const activeTabId = useTabStore((s) => s.activeTabId)
-  const sessionState = useChatStore((s) => activeTabId ? s.sessions[activeTabId] : undefined)
+  const resolvedSessionId = sessionId ?? activeTabId
+  const sessionState = useChatStore((s) =>
+    resolvedSessionId ? s.sessions[resolvedSessionId] : undefined,
+  )
   const stopGeneration = useChatStore((s) => s.stopGeneration)
   const reloadHistory = useChatStore((s) => s.reloadHistory)
   const queueComposerPrefill = useChatStore((s) => s.queueComposerPrefill)
-  const isMemberSession = useTeamStore((s) => activeTabId ? Boolean(s.getMemberBySessionId(activeTabId)) : false)
+  const isMemberSession = useTeamStore((s) =>
+    resolvedSessionId ? Boolean(s.getMemberBySessionId(resolvedSessionId)) : false,
+  )
   const addToast = useUIStore((s) => s.addToast)
   const messages = sessionState?.messages ?? []
   const chatState = sessionState?.chatState ?? 'idle'
@@ -144,7 +153,7 @@ export function MessageList() {
   }, [messages.length, streamingText])
 
   useEffect(() => {
-    if (!activeTabId || !rewindTarget) return
+    if (!resolvedSessionId || !rewindTarget) return
 
     let cancelled = false
     setIsLoadingPreview(true)
@@ -152,7 +161,7 @@ export function MessageList() {
     setRewindError(null)
 
     void sessionsApi
-      .rewind(activeTabId, {
+      .rewind(resolvedSessionId, {
         userMessageIndex: rewindTarget.userMessageIndex,
         dryRun: true,
       })
@@ -182,7 +191,7 @@ export function MessageList() {
     return () => {
       cancelled = true
     }
-  }, [activeTabId, rewindTarget])
+  }, [resolvedSessionId, rewindTarget])
 
   const { toolResultMap, childToolCallsByParent, renderItems } = useMemo(
     () => buildRenderModel(messages),
@@ -198,22 +207,22 @@ export function MessageList() {
   }, [isExecutingRewind])
 
   const handleConfirmRewind = useCallback(async () => {
-    if (!activeTabId || !rewindTarget || isExecutingRewind) return
+    if (!resolvedSessionId || !rewindTarget || isExecutingRewind) return
 
     setIsExecutingRewind(true)
     setRewindError(null)
 
     try {
       if (chatState !== 'idle') {
-        stopGeneration(activeTabId)
+        stopGeneration(resolvedSessionId)
       }
 
-      const result = await sessionsApi.rewind(activeTabId, {
+      const result = await sessionsApi.rewind(resolvedSessionId, {
         userMessageIndex: rewindTarget.userMessageIndex,
       })
 
-      await reloadHistory(activeTabId)
-      queueComposerPrefill(activeTabId, {
+      await reloadHistory(resolvedSessionId)
+      queueComposerPrefill(resolvedSessionId, {
         text: rewindTarget.content,
         attachments: rewindTarget.attachments,
       })
@@ -245,12 +254,12 @@ export function MessageList() {
       setIsExecutingRewind(false)
     }
   }, [
-    activeTabId,
     addToast,
     chatState,
     isExecutingRewind,
     queueComposerPrefill,
     reloadHistory,
+    resolvedSessionId,
     rewindTarget,
     stopGeneration,
     t,
