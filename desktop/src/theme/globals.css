@@ -159,6 +159,15 @@
   --color-surface-sidebar: var(--color-surface-container-low);
   --color-surface-hover: var(--color-surface-container-high);
   --color-surface-selected: var(--color-surface-container);
+  --color-sidebar-filter-bg: transparent;
+  --color-sidebar-filter-border: rgba(218, 193, 186, 0.92);
+  --color-sidebar-filter-icon-bg: transparent;
+  --color-sidebar-search-bg: rgba(255, 255, 255, 0.78);
+  --color-sidebar-search-border: rgba(218, 193, 186, 0.88);
+  --color-sidebar-item-hover: rgba(239, 238, 234, 0.82);
+  --color-sidebar-item-active: rgba(239, 238, 234, 0.94);
+  --color-sidebar-item-active-border: rgba(143, 72, 47, 0.12);
+  --sidebar-panel-bg-image: none;
 
   /* Border aliases */
   --color-border: var(--color-outline-variant);
@@ -179,6 +188,7 @@
 
   /* Shadows */
   --shadow-dropdown: 0 4px 20px rgba(27, 28, 26, 0.04), 0 12px 40px rgba(27, 28, 26, 0.08);
+  --shadow-sidebar-filter: none;
   --shadow-focus-ring: 0 0 0 1px rgba(143, 72, 47, 0.16);
   --shadow-error-ring: 0 0 0 1px rgba(186, 26, 26, 0.18);
   --shadow-button-primary: 0 8px 24px rgba(143, 72, 47, 0.18);
@@ -290,9 +300,20 @@
   --color-success: #7EDB8B;
   --color-warning: #F7C46C;
 
-  --color-surface-sidebar: var(--color-surface-container-low);
+  --color-surface-sidebar: #171615;
   --color-surface-hover: var(--color-surface-container-highest);
   --color-surface-selected: var(--color-surface-container);
+  --color-sidebar-filter-bg: rgba(255, 255, 255, 0.01);
+  --color-sidebar-filter-border: rgba(255, 255, 255, 0.08);
+  --color-sidebar-filter-icon-bg: transparent;
+  --color-sidebar-search-bg: rgba(255, 255, 255, 0.03);
+  --color-sidebar-search-border: rgba(255, 255, 255, 0.06);
+  --color-sidebar-item-hover: rgba(255, 255, 255, 0.04);
+  --color-sidebar-item-active: rgba(255, 255, 255, 0.06);
+  --color-sidebar-item-active-border: rgba(255, 181, 159, 0.14);
+  --sidebar-panel-bg-image:
+    radial-gradient(circle at top left, rgba(255, 181, 159, 0.045), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
 
   --color-border: rgba(90, 65, 56, 0.18);
   --color-border-focus: rgba(255, 181, 159, 0.55);
@@ -306,7 +327,8 @@
   --color-brand: var(--color-primary);
   --color-text-accent: var(--color-tertiary);
 
-  --shadow-dropdown: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --shadow-dropdown: 0 16px 40px rgba(0, 0, 0, 0.42);
+  --shadow-sidebar-filter: none;
   --shadow-focus-ring: 0 0 0 1px rgba(255, 181, 159, 0.32);
   --shadow-error-ring: 0 0 0 1px rgba(255, 180, 171, 0.26);
   --shadow-button-primary: 0 12px 24px rgba(255, 110, 64, 0.18);
@@ -449,6 +471,8 @@ button, input, textarea, select, a, [role="button"] {
 .sidebar-panel {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
+  background-image: var(--sidebar-panel-bg-image);
+  background-repeat: no-repeat;
   transition:
     background-color var(--motion-sidebar-duration) var(--motion-sidebar-easing),
     border-color var(--motion-sidebar-duration) var(--motion-sidebar-easing);
