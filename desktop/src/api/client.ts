@@ -50,7 +50,8 @@ async function request<T>(method: string, path: string, body?: unknown, options?
   }
 
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), options?.timeout ?? 30_000)
+  const timeoutMs = options?.timeout ?? 30_000
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
   try {
     const res = await fetch(url, {
       method,
@@ -69,6 +70,9 @@ async function request<T>(method: string, path: string, body?: unknown, options?
     return res.json() as Promise<T>
   } catch (err) {
     clearTimeout(timeout)
+    if (controller.signal.aborted) {
+      throw new Error(`Request timed out after ${Math.round(timeoutMs / 1000)}s`)
+    }
     throw err
   }
 }

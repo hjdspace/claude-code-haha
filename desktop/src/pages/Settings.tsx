@@ -28,7 +28,6 @@ import { useUIStore, type SettingsTab } from '../stores/uiStore'
 import { ClaudeOfficialLogin } from '../components/settings/ClaudeOfficialLogin'
 import { useUpdateStore } from '../stores/updateStore'
 import { formatBytes } from '../lib/formatBytes'
-import { InstallCenter } from '../components/settings/InstallCenter'
 
 export function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('providers')
@@ -51,7 +50,6 @@ export function Settings() {
             <TabButton icon="shield" label={t('settings.tab.permissions')} active={activeTab === 'permissions'} onClick={() => setActiveTab('permissions')} />
             <TabButton icon="tune" label={t('settings.tab.general')} active={activeTab === 'general'} onClick={() => setActiveTab('general')} />
             <TabButton icon="chat" label={t('settings.tab.adapters')} active={activeTab === 'adapters'} onClick={() => setActiveTab('adapters')} />
-            <TabButton icon="download" label={t('settings.tab.install')} active={activeTab === 'install'} onClick={() => setActiveTab('install')} />
             <TabButton icon="terminal" label={t('settings.tab.terminal')} active={activeTab === 'terminal'} onClick={() => setActiveTab('terminal')} />
             <TabButton icon="dns" label={t('settings.tab.mcp')} active={activeTab === 'mcp'} onClick={() => setActiveTab('mcp')} />
             <TabButton icon="smart_toy" label={t('settings.tab.agents')} active={activeTab === 'agents'} onClick={() => setActiveTab('agents')} />
@@ -70,7 +68,6 @@ export function Settings() {
           {activeTab === 'permissions' && <PermissionSettings />}
           {activeTab === 'general' && <GeneralSettings />}
           {activeTab === 'adapters' && <AdapterSettings />}
-          {activeTab === 'install' && <InstallCenter />}
           {activeTab === 'terminal' && <TerminalSettings />}
           {activeTab === 'mcp' && <McpSettings />}
           {activeTab === 'agents' && <AgentsSettings />}
@@ -1400,7 +1397,20 @@ function AboutSettings() {
   const initialize = useUpdateStore((s) => s.initialize)
 
   useEffect(() => {
-    import('@tauri-apps/api/app').then((mod) => mod.getVersion()).then(setVersion).catch(() => setVersion('0.1.0'))
+    let cancelled = false
+
+    import('@tauri-apps/api/app')
+      .then((mod) => mod.getVersion())
+      .then((value) => {
+        if (!cancelled) setVersion(value)
+      })
+      .catch(() => {
+        if (!cancelled) setVersion('0.1.0')
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {

@@ -33,7 +33,6 @@ export type SettingsTab =
   | 'permissions'
   | 'general'
   | 'adapters'
-  | 'install'
   | 'terminal'
   | 'mcp'
   | 'agents'

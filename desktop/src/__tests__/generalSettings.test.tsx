@@ -132,13 +132,13 @@ describe('Settings > General tab', () => {
     expect(useSettingsStore.getState().setSkipWebFetchPreflight).toHaveBeenCalledWith(false)
   })
 
-  it('keeps install and extension tabs available after removing the embedded terminal tab', () => {
+  it('keeps extension tabs available alongside the terminal tab', () => {
     render(<Settings />)
 
-    expect(screen.getByText('Install')).toBeInTheDocument()
+    expect(screen.queryByText('Install')).not.toBeInTheDocument()
+    expect(screen.getByText('Terminal')).toBeInTheDocument()
     expect(screen.getByText('MCP')).toBeInTheDocument()
     expect(screen.getByText('Plugins')).toBeInTheDocument()
-    expect(screen.queryByText('Terminal')).not.toBeInTheDocument()
   })
 })
 

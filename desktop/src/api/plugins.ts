@@ -38,6 +38,10 @@ export const pluginsApi = {
 
   reload: (cwd?: string) => {
     const query = cwd ? `?cwd=${encodeURIComponent(cwd)}` : ''
-    return api.post<{ ok: true; summary: PluginReloadSummary }>(`/api/plugins/reload${query}`)
+    return api.post<{ ok: true; summary: PluginReloadSummary }>(
+      `/api/plugins/reload${query}`,
+      undefined,
+      { timeout: 120_000 },
+    )
   },
 }
