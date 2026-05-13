@@ -1,5 +1,9 @@
 # Claude 桌面程序图片附件处理流程
 
+## GitHub 参考仓库
+
+本项目代码基于：[hjdspace/claude-code-haha](https://github.com/hjdspace/claude-code-haha)
+
 ## 整体架构
 
 ### 1. 前端处理（Desktop）
@@ -145,7 +149,15 @@ CLI 收到的消息格式类似：
 
 ## 关键代码位置
 
-- **前端图片处理**：[desktop/src/components/chat/ChatInput.tsx:652-678](file:///workspace/desktop/src/components/chat/ChatInput.tsx#L652-L678)
-- **后端附件处理**：[src/server/services/conversationService.ts:1325-1364](file:///workspace/src/server/services/conversationService.ts#L1325-L1364)
-- **用户内容构建**：[src/server/services/conversationService.ts:1311-1322](file:///workspace/src/server/services/conversationService.ts#L1311-L1322)
-- **AttachmentRef 类型**：[src/server/services/conversationService.ts:31-36](file:///workspace/src/server/services/conversationService.ts#L31-L36)
+- **前端图片处理**：
+  - 本地：[desktop/src/components/chat/ChatInput.tsx:652-678](file:///workspace/desktop/src/components/chat/ChatInput.tsx#L652-L678)
+  - GitHub：[desktop/src/components/chat/ChatInput.tsx#L652-L678](https://github.com/hjdspace/claude-code-haha/blob/main/desktop/src/components/chat/ChatInput.tsx#L652-L678)
+- **后端附件处理**：
+  - 本地：[src/server/services/conversationService.ts:1325-1364](file:///workspace/src/server/services/conversationService.ts#L1325-L1364)
+  - GitHub：[src/server/services/conversationService.ts#L1325-L1364](https://github.com/hjdspace/claude-code-haha/blob/main/src/server/services/conversationService.ts#L1325-L1364)
+- **用户内容构建**：
+  - 本地：[src/server/services/conversationService.ts:1311-1322](file:///workspace/src/server/services/conversationService.ts#L1311-L1322)
+  - GitHub：[src/server/services/conversationService.ts#L1311-L1322](https://github.com/hjdspace/claude-code-haha/blob/main/src/server/services/conversationService.ts#L1311-L1322)
+- **AttachmentRef 类型**：
+  - 本地：[src/server/services/conversationService.ts:31-36](file:///workspace/src/server/services/conversationService.ts#L31-L36)
+  - GitHub：[src/server/services/conversationService.ts#L31-L36](https://github.com/hjdspace/claude-code-haha/blob/main/src/server/services/conversationService.ts#L31-L36)
